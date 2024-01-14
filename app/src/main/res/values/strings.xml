@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">TravelProject_1</string>
+    <string name="finder">Finder</string>
+    <string name="navigator">Navigator</string>
+    <string name="planner">Planner</string>
+    <string name="memory">Memory</string>
+    <string name="start">Get Started</string>
+    <string name="back_button">Back</string>
+    <string name="user_pic">User Picture</string>
+    <string name="Map">Map</string>
+    <string name="natural">Natural</string>
+    <string name="food">Food</string>
+    <string name="worship">Worship</string>
+    <string name="hotel">Hotel</string>
+</resources>
