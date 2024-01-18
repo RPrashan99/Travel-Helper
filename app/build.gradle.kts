@@ -1,11 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
 }
+
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").inputStream().use { load(it) }
+}
+
+val MAPS_API_KEY: String by localProperties
 
 android {
     namespace = "com.example.travelproject_1"
@@ -22,6 +31,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "MAPS_API_KEY", "\"${MAPS_API_KEY}\"")
     }
 
     buildTypes {
@@ -34,14 +45,15 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
@@ -76,10 +88,13 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
+
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("com.google.firebase:firebase-database:20.3.0")
     implementation("com.google.firebase:firebase-auth:22.3.0")
+    implementation("com.google.firebase:firebase-firestore:24.10.0")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -95,9 +110,14 @@ dependencies {
     implementation ("com.google.maps.android:android-maps-utils:3.8.0")
     implementation ("com.google.maps.android:maps-utils-ktx:5.0.0")
     implementation ("com.google.android.libraries.places:places:3.3.0")
+
     implementation ("androidx.navigation:navigation-compose:2.7.6")
     implementation ("com.google.dagger:hilt-android:2.48")
     implementation ("androidx.hilt:hilt-navigation-compose:1.1.0")
     kapt ("com.google.dagger:hilt-android-compiler:2.44")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+=======
+    //Dagger - Hillt
+    kapt("androidx.hilt:hilt-compiler:1.0.0")
+
 }

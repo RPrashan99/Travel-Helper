@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val apiKey = BuildConfig.MAPS_API_KEY
         Log.d(TAG, "onCreate Called")
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {

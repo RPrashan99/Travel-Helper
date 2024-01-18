@@ -66,7 +66,7 @@ fun RegistrationScreen(
                 )
                 {
                     Image(
-                        painter = painterResource(id = R.drawable.background),
+                        painter = painterResource(id = R.drawable.sunny_beach),
                         contentDescription = null,
                         contentScale = ContentScale.FillBounds
                     )

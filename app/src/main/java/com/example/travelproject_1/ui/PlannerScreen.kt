@@ -2,8 +2,10 @@ package com.example.travelproject_1.ui
 
 import android.content.Context
 import android.location.Geocoder
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,26 +16,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,8 +51,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelproject_1.BuildConfig
 import com.example.travelproject_1.R
+import com.example.travelproject_1.components.SelectButton
 import com.example.travelproject_1.data.MapBtnNames
+import com.example.travelproject_1.data.Place
 import com.example.travelproject_1.model.MapButton
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -52,6 +65,7 @@ import com.google.maps.android.PolyUtil
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindowContent
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import kotlinx.coroutines.CoroutineScope
@@ -68,10 +82,12 @@ import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun PlannerScreen(
-    planViewModel: PlannerViewModel = viewModel()
+    planViewModel: PlannerViewModel = viewModel(),
+    navigateToMemory: () -> Unit = {}
 ){
     val uiState by planViewModel.uiState.collectAsState()
 
@@ -88,8 +104,8 @@ fun PlannerScreen(
             markerStopLocations = "",
             cameraPositionState = CameraPositionState(
                 position = CameraPosition.fromLatLngZoom(
-                    planViewModel.startLocationLatLng,
-                    10f)
+                    planViewModel.cameraLocationLatLang,
+                    9f)
             ),
             drawPolyList = uiState.path,
             addPath = {
@@ -101,12 +117,25 @@ fun PlannerScreen(
                 planViewModel.clickLocationType(it)
             },
             locationType = planViewModel.locationType,
+            middleLocation = planViewModel.middleLocationLatLang,
+            addLocations = {
+                planViewModel.setNearbyPlaces(it)
+            },
+            middleLocationShow = uiState.middlePlaceShow,
+            middleLocations = planViewModel.placesNearByType,
+            radiusOfSearch = planViewModel.distanceStartToEnd,
+            addMarkerToPath = {
+                planViewModel.addLocationStandby(it)
+            },
+            setMiddlePlaceToList = {
+                planViewModel.addLocationToPath()
+            }
         )
 
         ScheduleShow(
             startLocation = planViewModel.enteredStartLocation,
             endLocation = planViewModel.enteredEndLocation,
-            locationsList = uiState.locations,
+            locationsList = planViewModel.locationsAdded,
             isStartLocationChange = {
                 planViewModel.addStartLocation(it)
             },
@@ -123,8 +152,32 @@ fun PlannerScreen(
                 planViewModel.setEndLocation(
                     getStartLocation(current, planViewModel.enteredEndLocation)
                 )
+            },
+            isSaveButtonPressed = {
+                planViewModel.checkAndRunDatabaseInsertion()
+            },
+            goToMemory = {
+                navigateToMemory()
             }
         )
+
+        if(planViewModel.showAlertAlreadyAdded){
+            AlertDialog(
+                onDismissRequest = { planViewModel.showAlertAlreadyAdded = false },
+                confirmButton = {
+                    Button(
+                        onClick = { planViewModel.showAlertAlreadyAdded = false }
+                    ) {
+                        Text(text = "Got it")
+                    }
+                },
+                title = {
+                    Text(text = "Location Add")
+                },
+                text = {
+                    Text(text = "Location you are currently trying to add already added on the path")
+                })
+        }
 
     }
 }
@@ -140,8 +193,22 @@ fun MapViewShow(
     isStartEndGiven: Boolean,
     cameraBounds: LatLngBounds,
     onLocationTypeChange: (Int) -> Unit,
-    locationType: Int
+    locationType: Int,
+    middleLocation: LatLng,
+    addLocations: (List<Place>) -> Unit,
+    middleLocationShow: Boolean,
+    middleLocations: List<Place>,
+    radiusOfSearch: Int,
+    addMarkerToPath: (Place) -> Unit,
+    setMiddlePlaceToList: () -> Unit
 ){
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    var placeBoxShow by remember {
+        mutableStateOf(false)
+    }
 
     Box(modifier = Modifier
         .height(500.dp)
@@ -176,11 +243,10 @@ fun MapViewShow(
                 snippet = "Marker in End"
             )
 
-
-
-            if(isStartEndGiven){
+            if(isStartEndGiven && !middleLocationShow){
+                val key = BuildConfig.MAPS_API_KEY
                 getDirectionsPoly(
-                    stringResource(R.string.google_maps_api_key),
+                    key,
                     markerStartLocation,
                     markerEndLocation){
                         decodedPath -> addPath(decodedPath)
@@ -189,18 +255,46 @@ fun MapViewShow(
                 val cameraUpdate = CameraUpdateFactory.newLatLngBounds(cameraBounds,100)
                 cameraPositionState.move(cameraUpdate)
 
-//                val places = fetchPlacesNearPolyline(locationType)
-//                places.forEach { place ->
-//                    Marker(
-//                        state = MarkerState(position = place.latLng),
-//                        title = place.name,
-//                        snippet = place.address
-//                    )
-//                }
+                fetchPlacesNearPolyline(
+                    key,
+                    middleLocation,
+                    radiusOfSearch){
+
+                    places ->  addLocations(places)
+                }
             }
 
-            if(drawPolyList != null){
-                Polyline(points = drawPolyList)
+            Polyline(points = drawPolyList)
+
+            if(middleLocationShow){
+                for (place in middleLocations){
+                    MarkerInfoWindowContent(
+                        state = MarkerState(position = place.placeLocation!!),
+                        title = place.placeName,
+                        snippet = place.placeName,
+                        content = {
+                            addMarkerToPath(place)
+                            placeBoxShow = true
+                            cardInfoMarker(place = place)
+                        }
+                    )
+                }
+            }
+        }
+
+        if(placeBoxShow){
+            Button(
+                onClick = {
+                    setMiddlePlaceToList()
+                    placeBoxShow = false
+                          },
+                modifier = Modifier
+                    .zIndex(2F)
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 10.dp)
+                    .shadow(elevation = 5.dp)
+            ) {
+                Text(text = "Add")
             }
         }
     }
@@ -210,62 +304,79 @@ fun MapViewShow(
 fun ScheduleShow(
     startLocation: String,
     endLocation: String,
-    locationsList: List<String>,
+    locationsList: List<Place>,
     isStartLocationChange: (String) -> Unit,
     isEndLocationChange: (String) -> Unit,
     isSavePressed: () -> Unit,
     isStartButtonPressed: () -> Unit,
     isEndButtonPressed: () -> Unit,
+    isSaveButtonPressed: () -> Unit,
+    goToMemory:() -> Unit
 ){
-    Column(
+
+    LazyColumn(
         modifier = Modifier
             .padding(10.dp)
             .background(Color(0xFFFFFFFF))
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(0.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Schedule")
+        item {
+            Text(
+                text = "Schedule",
+                modifier = Modifier
+                    .padding(bottom = 5.dp))
+        }
 
-        ScheduleCardStartEnd(
-            location = startLocation,
-            isStart = true,
-            isValueChange = {
-                isStartLocationChange(it)
-            },
-            onButtonClick = isStartButtonPressed)
+        item {
+            ScheduleCardStartEnd(
+                location = startLocation,
+                isStart = true,
+                isValueChange = {
+                    isStartLocationChange(it)
+                },
+                onButtonClick = isStartButtonPressed)
+        }
 
-        locationsList.forEach { location ->
-            ScheduleCard(location) }
+        val show = locationsList.isEmpty()
+        Log.d("ShowLocations", show.toString())
 
-        ScheduleCardStartEnd(
-            location = endLocation,
-            isStart = false,
-            isValueChange = {
-                isEndLocationChange(it)
-            },
-            onButtonClick = isEndButtonPressed)
+        items(locationsList) { location ->
+                ScheduleCard(location = location)
+            }
 
-        Button(
-            onClick = { isSavePressed() },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(R.color.primaryColor)
-            )
-        ) {
-            Text(text = "Save")
+        item {
+            ScheduleCardStartEnd(
+                location = endLocation,
+                isStart = false,
+                isValueChange = {
+                    isEndLocationChange(it)
+                },
+                onButtonClick = isEndButtonPressed)
+        }
+
+        item {
+            SelectButton(
+                isButtonPressed = {
+                    isSaveButtonPressed()
+                    goToMemory()
+                                  },
+                text = "Add",
+                modifier = Modifier
+                    .padding(top = 5.dp))
         }
     }
 }
 
 @Composable
 fun ScheduleCard(
-    location: String
+    location: Place
 ){
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(50.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -277,7 +388,37 @@ fun ScheduleCard(
             textAlign = TextAlign.Center)
         Image(
             painter = painterResource(R.drawable.nav_middle),
-            contentDescription = "nav_start",
+            contentDescription = "nav_middle",
+            modifier = Modifier
+                .weight(1f))
+        Text(
+            text = location.placeName!!,
+            modifier = Modifier
+                .weight(3f))
+
+    }
+}
+
+@Composable
+fun ScheduleCardExample(
+    location: String
+){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Text(
+            text = "Stop",
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically),
+            textAlign = TextAlign.Center)
+        Image(
+            painter = painterResource(R.drawable.nav_middle),
+            contentDescription = "nav_middle",
             modifier = Modifier
                 .weight(1f))
         Text(
@@ -301,6 +442,7 @@ fun ScheduleCardStartEnd(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
+        val focusManager = LocalFocusManager.current
         Text(
             text = if (isStart) {
                 "Start"
@@ -344,8 +486,7 @@ fun ScheduleCardStartEnd(
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    // Handle "Done" button click
-                    // This will also handle "Enter" key if it's the last field in the focus chain
+                    focusManager.clearFocus()
                     onButtonClick()
                 }
             ),)
@@ -388,6 +529,47 @@ fun LocationButton(
                 .fillMaxSize(),
             contentScale = ContentScale.FillBounds
         )
+    }
+}
+
+@Composable
+fun cardInfoMarker(
+    place: Place,
+){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier
+            .width(250.dp)
+            .height(100.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Image(
+                painter = painterResource(R.drawable.marker_image),
+                contentDescription = place.placeName,
+                modifier = Modifier
+                    .weight(1F)
+            )
+            
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .weight(2F)
+            ) {
+                Text(
+                    text = place.placeName!!,
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 20.dp),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
     }
 }
 
@@ -518,10 +700,99 @@ private fun getDirectionsPoly(key: String, origin: LatLng, destination: LatLng,
 }
 
 private fun fetchPlacesNearPolyline(key: String,
+                                    middleLocation: LatLng,
+                                    radius: Int,
+                                    onLocationsReady: (List<Place>) -> Unit){
+
+    val places = mutableListOf<Place>()
+
+    val client = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .build()
+
+    val json = "application/json; charset=utf-8".toMediaTypeOrNull()
+
+    val routeDetails = """
+        {
+          "includedTypes": ["historical_landmark","national_park","tourist_attraction","church","hindu_temple","mosque","synagogue","restaurant","cafe","hotel","guest_house"],
+          "maxResultCount": 20,
+          "locationRestriction": {
+            "circle": {
+              "center": {
+                "latitude": ${middleLocation.latitude},
+                "longitude": ${middleLocation.longitude}},
+              "radius": $radius
+            }
+          }
+        }
+    """.trimIndent()
+
+    val body = routeDetails.toRequestBody(json)
+
+    val request = Request.Builder()
+        .url("https://places.googleapis.com/v1/places:searchNearby")
+        .post(body)
+        .addHeader("Content-Type", "application/json")
+        .addHeader("X-Goog-Api-Key", key)
+        .addHeader("X-Goog-FieldMask",
+            "places.displayName,places.types,places.id,places.location")
+        .build()
+
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            println(responseBody)
+
+            val jsonResponse = JSONObject(responseBody)
+            val locTypes = jsonResponse.getJSONArray("places")
+
+            for ( i in 0 until locTypes.length() ) {
+
+                val typesList = mutableListOf<String>()
+
+                val placeObject = locTypes.getJSONObject(i)
+                val displayNameObject = placeObject.getJSONObject("displayName")
+                val placeName = displayNameObject.getString("text")
+
+                val placeId = placeObject.getString("id")
+
+                val placeTypes = placeObject.getJSONArray("types")
+
+                val placeLocationObject = placeObject.getJSONObject("location")
+                val placeLatObject = placeLocationObject.getDouble("latitude")
+                val placeLongObject = placeLocationObject.getDouble("longitude")
+                val placeLocation = LatLng(placeLatObject, placeLongObject)
+
+
+                for ( i in 0 until placeTypes.length() ){
+                    val placeTypeText = placeTypes.getString(i)
+
+                    typesList.add(placeTypeText)
+                }
+
+                var place = Place(placeName, placeId, typesList, placeLocation)
+                println(place.placeName)
+
+                places.add(place)
+            }
+
+            withContext(Dispatchers.Main) {
+                onLocationsReady(places)
+            }
+        } catch (e: IOException){
+            e.printStackTrace()
+        }
+    }
+}
+
+private fun fetchPlacesNearPolylineBak(key: String,
                                     selectedLocationType: Int,
                                     middleLocation: LatLng){
 
-    val types = mutableListOf<String>()
+    val places = mutableListOf<String>()
     
     val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -569,11 +840,20 @@ private fun fetchPlacesNearPolyline(key: String,
         try {
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
+
+            println(responseBody)
+
             val jsonResponse = JSONObject(responseBody)
-            val locTypes = jsonResponse.getJSONArray("types")
+            val locTypes = jsonResponse.getJSONArray("places")
+
             for ( i in 0 until locTypes.length() ) {
-                val type = locTypes.getString(i)
-                types.add(type)
+
+                val typesList = mutableListOf<String>()
+
+                val placeObject = locTypes.getJSONObject(i)
+                val displayNameObject = placeObject.getJSONObject("displayName")
+                val placeName = displayNameObject.getString("text")
+
             }
 
             val displayNameObject: JSONObject = jsonResponse.getJSONObject("displayName")
