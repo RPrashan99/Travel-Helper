@@ -9,9 +9,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.travelproject_1.data.Place
+import com.example.travelproject_1.data.PlaceFire
 import com.example.travelproject_1.data.PlanUiState
+import com.example.travelproject_1.data.TravelPlan
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +83,12 @@ class PlannerViewModel(): ViewModel() {
         private set
 
     var locationsAdded by mutableStateOf(listOf<Place>())
+        private set
+
+    var saveSucess by mutableStateOf(false)
+        private set
+
+    var saveNotSucess by mutableStateOf(false)
         private set
 
 
@@ -161,7 +172,6 @@ class PlannerViewModel(): ViewModel() {
         Log.d("Fun_clickBtn", "Good")
 
         middleLocationsPlacesForType(value)
-
     }
 
     private fun checkStartEnd(){
@@ -311,6 +321,57 @@ class PlannerViewModel(): ViewModel() {
             }
         }
 
+    }
+
+    fun checkAndRunDatabaseInsertion(){
+        if(
+            uiState.value.startLocation != "" && uiState.value.destination != "" && locationsAdded.isNotEmpty()
+        ){
+            addPlanToDatabase()
+        }else{
+
+        }
+    }
+
+    private fun addPlanToDatabase(){
+
+        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+        val dbTravelPlans: CollectionReference = db.collection("TravelPlans")
+
+        var locations: MutableList<PlaceFire> = mutableListOf()
+
+        for(i in locationsAdded){
+            val locLat = i.placeLocation.latitude
+            val locLong = i.placeLocation.longitude
+
+            val geoPoint = GeoPoint(locLat,locLong)
+
+            val placeFire = PlaceFire(i.placeID,i.placeName,i.placeType,geoPoint)
+
+            locations.add(placeFire)
+        }
+
+        val travelPlan =  TravelPlan(
+            userId = "Test",
+            originName = uiState.value.startLocation,
+            originLatLang = GeoPoint(startLocationLatLng.latitude,startLocationLatLng.longitude),
+            destinationName = uiState.value.destination,
+            destinationLatLang = GeoPoint(endLocationLatLng.latitude,endLocationLatLng.longitude),
+            stopLocations = locations
+        )
+
+        dbTravelPlans.add(travelPlan).addOnSuccessListener {
+            saveSucess = true
+            Log.d("Database","Success")
+        }.addOnFailureListener {
+            saveNotSucess = true
+            Log.d("Database","failed")
+        }
+    }
+
+    private fun againSavePlan(){
+        saveNotSucess = false
     }
 
 

@@ -45,10 +45,10 @@ fun LoginScreen(
     var cPassword by remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
     var cPasswordVisibility by remember { mutableStateOf(false) }
-    var erroeE by remember { mutableStateOf(false) }
-    var erroeCP by remember { mutableStateOf(false) }
-    var erroeC by remember { mutableStateOf(false) }
-    var erroeP by remember { mutableStateOf(false) }
+    var errorE by remember { mutableStateOf(false) }
+    var errorCP by remember { mutableStateOf(false) }
+    var errorC by remember { mutableStateOf(false) }
+    var errorP by remember { mutableStateOf(false) }
     var pLength by remember { mutableStateOf(false) }
 
     Surface(
@@ -70,7 +70,7 @@ fun LoginScreen(
                 )
                 {
                     Image(
-                        painter = painterResource(id = R.drawable.background),
+                        painter = painterResource(id = R.drawable.sunny_beach),
                         contentDescription = null,
                         contentScale = ContentScale.FillBounds
                     )
@@ -130,7 +130,7 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
                         )
                     Spacer(modifier = Modifier.height(10.dp))
-                    if (erroeE){
+                    if (errorE){
                         Text(text = "Enter Email",
                             color = Color.Red,
                             modifier = Modifier
@@ -138,7 +138,7 @@ fun LoginScreen(
 
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-                    if (erroeE){
+                    if (errorE){
                         Text(text = "Enter password",
                             color = Color.Red,
                             modifier = Modifier

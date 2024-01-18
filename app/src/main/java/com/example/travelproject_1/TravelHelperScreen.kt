@@ -157,7 +157,11 @@ fun TravelHelperApp(
             }
 
             composable(route = TravelHelperScreen.Planner.name){
-                PlannerScreen()
+                PlannerScreen(
+                    navigateToMemory = {
+                        navController.navigate(TravelHelperScreen.Memory.name)
+                    }
+                )
             }
         }
     }

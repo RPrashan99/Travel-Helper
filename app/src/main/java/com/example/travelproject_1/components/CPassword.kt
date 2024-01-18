@@ -12,10 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -58,7 +54,7 @@ fun CPassword(
         trailingIcon = {
             if (value.isNotEmpty()){
                 val visibilityIcon = if (passwordVisibility){
-                    painterResource(id = R.drawable.background)
+                    painterResource(id = R.drawable.sunny_beach)
                 }
                 else{
                     painterResource(id = R.drawable.sign_up)

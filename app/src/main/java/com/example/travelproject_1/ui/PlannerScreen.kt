@@ -86,7 +86,8 @@ import java.util.concurrent.TimeUnit
 @Preview
 @Composable
 fun PlannerScreen(
-    planViewModel: PlannerViewModel = viewModel()
+    planViewModel: PlannerViewModel = viewModel(),
+    navigateToMemory: () -> Unit = {}
 ){
     val uiState by planViewModel.uiState.collectAsState()
 
@@ -151,6 +152,12 @@ fun PlannerScreen(
                 planViewModel.setEndLocation(
                     getStartLocation(current, planViewModel.enteredEndLocation)
                 )
+            },
+            isSaveButtonPressed = {
+                planViewModel.checkAndRunDatabaseInsertion()
+            },
+            goToMemory = {
+                navigateToMemory()
             }
         )
 
@@ -262,7 +269,7 @@ fun MapViewShow(
             if(middleLocationShow){
                 for (place in middleLocations){
                     MarkerInfoWindowContent(
-                        state = MarkerState(position = place.placeLocation),
+                        state = MarkerState(position = place.placeLocation!!),
                         title = place.placeName,
                         snippet = place.placeName,
                         content = {
@@ -279,7 +286,8 @@ fun MapViewShow(
             Button(
                 onClick = {
                     setMiddlePlaceToList()
-                          placeBoxShow = false},
+                    placeBoxShow = false
+                          },
                 modifier = Modifier
                     .zIndex(2F)
                     .align(Alignment.BottomCenter)
@@ -301,7 +309,9 @@ fun ScheduleShow(
     isEndLocationChange: (String) -> Unit,
     isSavePressed: () -> Unit,
     isStartButtonPressed: () -> Unit,
-    isEndButtonPressed: () -> Unit
+    isEndButtonPressed: () -> Unit,
+    isSaveButtonPressed: () -> Unit,
+    goToMemory:() -> Unit
 ){
 
     LazyColumn(
@@ -348,7 +358,10 @@ fun ScheduleShow(
 
         item {
             SelectButton(
-                isButtonPressed = { /*TODO*/ },
+                isButtonPressed = {
+                    isSaveButtonPressed()
+                    goToMemory()
+                                  },
                 text = "Add",
                 modifier = Modifier
                     .padding(top = 5.dp))
@@ -379,7 +392,7 @@ fun ScheduleCard(
             modifier = Modifier
                 .weight(1f))
         Text(
-            text = location.placeName,
+            text = location.placeName!!,
             modifier = Modifier
                 .weight(3f))
 
@@ -547,7 +560,7 @@ fun cardInfoMarker(
                     .weight(2F)
             ) {
                 Text(
-                    text = place.placeName,
+                    text = place.placeName!!,
                     modifier = Modifier
                         .padding(top = 10.dp, start = 20.dp),
                     style = TextStyle(

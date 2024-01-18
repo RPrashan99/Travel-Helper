@@ -93,7 +93,7 @@ fun FinderScreen(
                 finderViewModel.foundLocations.forEach{
                     place ->
                         Marker(
-                            state = MarkerState(place.placeLocation),
+                            state = MarkerState(place.placeLocation!!),
                             title = place.placeName
                         )
                 }
@@ -176,7 +176,7 @@ fun LocationCard(location: Place){
             containerColor = Color.Gray)
     ) {
             Text(
-                text = location.placeName,
+                text = location.placeName!!,
                 modifier = Modifier.padding(5.dp),
                 color = Color.White
             )
