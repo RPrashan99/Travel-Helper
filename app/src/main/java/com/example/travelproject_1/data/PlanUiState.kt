@@ -8,6 +8,8 @@ data class PlanUiState(
     val destination: String = "",
     val path: List<LatLng> = listOf(),
     val bounds: LatLngBounds = LatLngBounds(LatLng(6.8772, 79.8355), LatLng(6.9500, 79.9622)),
-    val locations: List<String> = listOf(),
-    val pathShow: Boolean = false
+    val locations: MutableList<Place> = arrayListOf<Place>(),
+    val pathShow: Boolean = false,
+    val middlePlaceShow: Boolean = false,
+    val reset: Boolean = false
 )

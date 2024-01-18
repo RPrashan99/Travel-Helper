@@ -12,4 +12,5 @@
     <string name="food">Food</string>
     <string name="worship">Worship</string>
     <string name="hotel">Hotel</string>
+    <string name="google_maps_api_key" translatable="false" tools:ignore="UnusedResources">AIzaSyD9iklDwJ5uIXZULvfSbs5iHYWnyDxreqo</string>
 </resources>

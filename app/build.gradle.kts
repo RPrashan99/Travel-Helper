@@ -1,8 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
+
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").inputStream().use { load(it) }
+}
+
+val MAPS_API_KEY: String by localProperties
 
 android {
     namespace = "com.example.travelproject_1"
@@ -19,6 +27,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "MAPS_API_KEY", "\"${MAPS_API_KEY}\"")
     }
 
     buildTypes {
@@ -39,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
