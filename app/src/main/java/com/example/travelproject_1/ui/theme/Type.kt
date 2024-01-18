@@ -17,6 +17,9 @@ val alegreyaSansFontFamily = FontFamily(
     Font(R.font.alegreya_sans_regular, FontWeight.Normal),
     Font(R.font.alegreya_sans_medium, FontWeight.Medium)
 )
+val poppinsFontFamily = FontFamily(
+    Font(R.font.poppins, FontWeight.SemiBold)
+)
 
 // Set of Material typography styles to start with
 val Typography = Typography(

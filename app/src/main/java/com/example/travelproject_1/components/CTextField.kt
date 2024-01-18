@@ -55,7 +55,9 @@ fun CTextField(
             focusedIndicatorColor = Color.Black,
             unfocusedIndicatorColor = Color.DarkGray
         ),
-        keyboardOptions = KeyboardOptions.Default,
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Next
+        ),
         visualTransformation = visualTransformation,
         singleLine = true,
         maxLines = 1,

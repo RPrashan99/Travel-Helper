@@ -1,21 +1,17 @@
 package com.example.travelproject_1.components
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -28,9 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travelproject_1.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CPassword(
+fun CCheckPassword(
+
     onValueChange: (String) -> Unit,
     placeholder: String,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -39,9 +35,7 @@ fun CPassword(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     passwordVisibility: Boolean,
     cPasswordVisibility: Boolean,
-   // passwordVisualTransformation: Boolean
-) {
-
+){
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -59,16 +53,16 @@ fun CPassword(
         },
         trailingIcon = {
             if (value.isNotEmpty()){
-                val visibilityIcon = if (passwordVisibility){
+                val visibilityIcon = if (cPasswordVisibility){
                     painterResource(id = R.drawable.background)
                 }
                 else{
                     painterResource(id = R.drawable.sign_up)
                 }
                 Icon(painter = visibilityIcon,
-                    contentDescription = if (passwordVisibility) "Hide Password" else "Show Password",
+                    contentDescription = if (cPasswordVisibility) "Hide Password" else "Show Password",
                     Modifier.clickable {
-                         //cPasswordVisibility = !passwordVisibility
+                        //cPasswordVisibility = !cPasswordVisibility
                     }
                 )
             }
@@ -82,22 +76,17 @@ fun CPassword(
 
 
         keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Next,
+            imeAction = ImeAction.Done,
             keyboardType = KeyboardType.Password
         ),
-//        visualTransformation = if (passwordVisibility){
-//            visualTransformation.None
-//        }else{
-//            passwordVisualTransformation(),
-//        }
+        visualTransformation = visualTransformation,
         singleLine = true,
         maxLines = 1,
 
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Black,
-            unfocusedIndicatorColor = Color.DarkGray,
-        ),
-
+//        colors = TextFieldDefaults.textFieldColors(
+//            containerColor = Color.Transparent,
+//            focusedIndicatorColor = Color.Black,
+//            unfocusedIndicatorColor = Color.DarkGray,
+//        ),
     )
 }

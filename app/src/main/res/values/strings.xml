@@ -1,8 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="google_maps_api_key" translatable="false" tools:ignore="UnusedResources">AIzaSyD9iklDwJ5uIXZULvfSbs5iHYWnyDxreqo</string>
     <string name="app_name">TravelProject_1</string>
     <string name="finder">Finder</string>
     <string name="navigator">Navigator</string>
     <string name="planner">Planner</string>
+    <string name="login">Login</string>
+    <string name="registration">Registration</string>
     <string name="memory">Memory</string>
     <string name="start">Get Started</string>
     <string name="back_button">Back</string>
@@ -12,4 +15,6 @@
     <string name="food">Food</string>
     <string name="worship">Worship</string>
     <string name="hotel">Hotel</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
 </resources>

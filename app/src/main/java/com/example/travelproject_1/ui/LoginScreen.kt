@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.example.travelproject_1.R
 import com.example.travelproject_1.components.CAccountRow
 import com.example.travelproject_1.components.CButton
+import com.example.travelproject_1.components.CPassword
 import com.example.travelproject_1.components.CTextField
 
 @Composable
@@ -126,7 +127,7 @@ fun LoginScreen(
                         .align(Alignment.CenterHorizontally)
 
                 ) {
-                    CTextField(onValueChange = {email =it}, label = "Email Address", placeholder ="Enter Email", value =email,
+                    CTextField(onValueChange = {email =it}, label = "User Name", placeholder ="Enter Email", value =email,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
                         )
                     Spacer(modifier = Modifier.height(10.dp))
@@ -156,9 +157,19 @@ fun LoginScreen(
                         onValueChange = {password = it},
                         label = "User Name",
                         placeholder = "Enter Password",
-                        visualTransformation = PasswordVisualTransformation(),
+
                         value = password,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go)
+
+                    )
+                    CPassword(
+                        onValueChange = {password = it},
+                        placeholder = "Enter Password",
+                        value = password,
+                        label = "User Name",
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
+                        passwordVisibility = passwordVisibility,
+                        cPasswordVisibility = cPasswordVisibility,
                     )
 
                     CButton(text = "Sign In")

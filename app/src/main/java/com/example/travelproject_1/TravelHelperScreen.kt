@@ -25,17 +25,22 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.travelproject_1.components.CAccountRow
 import com.example.travelproject_1.ui.FinderScreen
 import com.example.travelproject_1.ui.HomePage
+import com.example.travelproject_1.ui.LoginScreen
 import com.example.travelproject_1.ui.MemoryScreen
 import com.example.travelproject_1.ui.NavigatorScreen
 import com.example.travelproject_1.ui.PlannerScreen
+import com.example.travelproject_1.ui.RegistrationScreen
 import com.example.travelproject_1.ui.StartScreen
+
 
 enum class TravelHelperScreen(@StringRes val title: Int){
     Start(title = R.string.start),
@@ -43,6 +48,8 @@ enum class TravelHelperScreen(@StringRes val title: Int){
     Planner(title = R.string.planner),
     Finder(title = R.string.finder),
     Memory(title = R.string.memory),
+    Login(title = R.string.login),
+    Registration(title = R.string.registration),
     Navigator(title = R.string.navigator),
 }
 
@@ -92,6 +99,7 @@ fun TravelHelperAppBar(
 
 @Composable
 fun TravelHelperApp(
+    vm: hiltViewModel<FbViewModel>(),
     navController: NavHostController = rememberNavController()
 ){
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -104,7 +112,10 @@ fun TravelHelperApp(
         R.string.planner,
         R.string.memory,
         R.string.finder,
-        R.string.navigator
+        R.string.navigator,
+        R.string.login,
+        R.string.registration,
+        R.string.navigator,
     )
 
     Scaffold(
@@ -126,10 +137,19 @@ fun TravelHelperApp(
 
             composable(route = TravelHelperScreen.Start.name){
                 StartScreen(onStartedButtonClicked = {
-                    navController.navigate(TravelHelperScreen.Home.name)
+                    navController.navigate(TravelHelperScreen.Login.name)
                 })
             }
-
+            composable(route = TravelHelperScreen.Login.name){
+                LoginScreen(onSignupButtonTap = {
+                    navController.navigate(TravelHelperScreen.Registration.name)
+                })
+            }
+            composable(route = TravelHelperScreen.Registration.name){
+                RegistrationScreen( onSignInButtonTap = {
+                    navController.navigate(TravelHelperScreen.Login.name)
+                })
+            }
             composable(route = TravelHelperScreen.Home.name){
                 HomePage(
                     onMainButtonClicked = {

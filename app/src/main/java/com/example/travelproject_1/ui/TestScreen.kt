@@ -55,39 +55,7 @@ fun TestScreen(
 
     val uiState by testViewModel.uiState.collectAsState()
 
-    val colombo = LatLng(6.927079, 79.861244)
-    val mathugama = LatLng(6.521943200000001, 80.11368519999996)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(colombo, 10f)
-    }
-    val context = LocalContext.current
 
-    getDirections(context, colombo, mathugama){
-        decodedPath -> testViewModel.addPath(decodedPath)
-    }
-
-    GoogleMap(
-        cameraPositionState = cameraPositionState
-    ) {
-        if(uiState.path.isNotEmpty()){
-            Polyline(points = uiState.path)
-
-            val bounds = LatLngBounds.builder().apply {
-                uiState.path.forEach{include(it)}
-            }.build()
-
-            val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds,100)
-            cameraPositionState.move(cameraUpdate)
-        }
-
-        Marker(
-            state = MarkerState(colombo)
-        )
-        Marker(
-            state = MarkerState(mathugama)
-        )
-
-    }
 }
 
 @Composable
