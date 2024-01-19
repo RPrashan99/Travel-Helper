@@ -142,7 +142,6 @@ fun PlannerScreen(
             isEndLocationChange = {
                 planViewModel.addEndLocation(it)
             },
-            isSavePressed = {},
             isStartButtonPressed = {
                 planViewModel.setStartLocation(
                     getStartLocation(current, planViewModel.enteredStartLocation)
@@ -269,7 +268,7 @@ fun MapViewShow(
             if(middleLocationShow){
                 for (place in middleLocations){
                     MarkerInfoWindowContent(
-                        state = MarkerState(position = place.placeLocation!!),
+                        state = MarkerState(position = place.placeLocation),
                         title = place.placeName,
                         snippet = place.placeName,
                         content = {
@@ -307,7 +306,6 @@ fun ScheduleShow(
     locationsList: List<Place>,
     isStartLocationChange: (String) -> Unit,
     isEndLocationChange: (String) -> Unit,
-    isSavePressed: () -> Unit,
     isStartButtonPressed: () -> Unit,
     isEndButtonPressed: () -> Unit,
     isSaveButtonPressed: () -> Unit,
@@ -362,7 +360,7 @@ fun ScheduleShow(
                     isSaveButtonPressed()
                     goToMemory()
                                   },
-                text = "Add",
+                text = "Finish",
                 modifier = Modifier
                     .padding(top = 5.dp))
         }
@@ -392,7 +390,7 @@ fun ScheduleCard(
             modifier = Modifier
                 .weight(1f))
         Text(
-            text = location.placeName!!,
+            text = location.placeName,
             modifier = Modifier
                 .weight(3f))
 
@@ -560,7 +558,7 @@ fun cardInfoMarker(
                     .weight(2F)
             ) {
                 Text(
-                    text = place.placeName!!,
+                    text = place.placeName,
                     modifier = Modifier
                         .padding(top = 10.dp, start = 20.dp),
                     style = TextStyle(
@@ -782,86 +780,6 @@ private fun fetchPlacesNearPolyline(key: String,
             withContext(Dispatchers.Main) {
                 onLocationsReady(places)
             }
-        } catch (e: IOException){
-            e.printStackTrace()
-        }
-    }
-}
-
-private fun fetchPlacesNearPolylineBak(key: String,
-                                    selectedLocationType: Int,
-                                    middleLocation: LatLng){
-
-    val places = mutableListOf<String>()
-    
-    val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .build()
-
-    val json = "application/json; charset=utf-8".toMediaTypeOrNull()
-
-    val includeLocationType =
-        when(selectedLocationType){
-            1 -> listOf<String>("historical_landmark","national_park","tourist_attraction")
-            2 -> listOf<String>("church","hindu_temple","mosque","synagogue")
-            3 -> listOf<String>("restaurant","cafe")
-            4 -> listOf<String>("hotel","guest_house")
-            else -> listOf<String>("tourist_attraction")
-        }
-
-    val routeDetails = """
-        {
-          "includedTypes": $includeLocationType,
-          "maxResultCount": 10,
-          "locationRestriction": {
-            "circle": {
-              "center": {
-                "latitude": ${middleLocation.latitude},
-                "longitude": ${middleLocation.longitude}},
-              "radius": 1000.0
-            }
-          }
-        }
-    """.trimIndent()
-
-    val body = routeDetails.toRequestBody(json)
-
-    val request = Request.Builder()
-        .url("https://places.googleapis.com/v1/places:searchNearby")
-        .post(body)
-        .addHeader("Content-Type", "application/json")
-        .addHeader("X-Goog-Api-Key", key)
-        .addHeader("X-Goog-FieldMask",
-            "places.displayName,places.types")
-        .build()
-
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
-
-            println(responseBody)
-
-            val jsonResponse = JSONObject(responseBody)
-            val locTypes = jsonResponse.getJSONArray("places")
-
-            for ( i in 0 until locTypes.length() ) {
-
-                val typesList = mutableListOf<String>()
-
-                val placeObject = locTypes.getJSONObject(i)
-                val displayNameObject = placeObject.getJSONObject("displayName")
-                val placeName = displayNameObject.getString("text")
-
-            }
-
-            val displayNameObject: JSONObject = jsonResponse.getJSONObject("displayName")
-            val locationText: String = displayNameObject.getString("text")
-
-//            withContext(Dispatchers.Main) {
-//                onPathReady(decodedPath)
-//            }
         } catch (e: IOException){
             e.printStackTrace()
         }

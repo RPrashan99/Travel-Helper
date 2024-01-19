@@ -75,7 +75,7 @@ fun FinderScreen(
                 .zIndex(1f),
             cameraPositionState = CameraPositionState(
                 CameraPosition.fromLatLngZoom(
-                    uiState.originLocation, 12f
+                    uiState.originLocation, 13f
                 )
             ),
             onMapLoaded = {
@@ -105,7 +105,7 @@ fun FinderScreen(
                 .align(Alignment.BottomStart)
                 .padding(10.dp)
                 .zIndex(2f)
-                .height(120.dp)
+                .height(150.dp)
                 .background(color = Color.White.copy(alpha = 0.7f)),){
 
             Text(

@@ -6,6 +6,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
 import com.example.travelproject_1.R
 
 @Composable
@@ -21,6 +25,12 @@ fun SelectButton(
             containerColor = colorResource(R.color.primaryColor)
         )
     ) {
-        Text(text = text)
+        Text(
+            text = text,
+            style = TextStyle(
+                fontFamily = FontFamily(Font(R.font.k2d)),
+                fontSize = 15.sp
+            )
+        )
     }
 }

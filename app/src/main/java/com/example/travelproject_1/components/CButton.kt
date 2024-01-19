@@ -22,10 +22,12 @@ fun CButton(
 
 ) {
     Button(
-        onClick = { },
+        onClick = {
+            onClick()
+                  },
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(55.dp)
             .padding(top = 10.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A8E86)),
         shape = RoundedCornerShape(5.dp),

@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import com.example.travelproject_1.data.Place
 import com.example.travelproject_1.data.PlaceFire
 import com.example.travelproject_1.data.PlanUiState
+import com.example.travelproject_1.data.SessionManager
 import com.example.travelproject_1.data.TravelPlan
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -191,7 +192,12 @@ class PlannerViewModel(): ViewModel() {
             location2.longitude = endLocationLatLng.longitude
 
             val distance = location1.distanceTo(location2)
-            distanceStartToEnd = distance.toInt()/2
+
+            var radius = distance.toInt()/2
+
+            if(radius > 10000) radius = 10000
+
+            distanceStartToEnd = radius
 
             getMiddleLocation()
         }
@@ -335,6 +341,8 @@ class PlannerViewModel(): ViewModel() {
 
     private fun addPlanToDatabase(){
 
+        val currentUserId = SessionManager.currentUser?.id!!
+
         val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
         val dbTravelPlans: CollectionReference = db.collection("TravelPlans")
@@ -353,7 +361,7 @@ class PlannerViewModel(): ViewModel() {
         }
 
         val travelPlan =  TravelPlan(
-            userId = "Test",
+            userId = currentUserId,
             originName = uiState.value.startLocation,
             originLatLang = GeoPoint(startLocationLatLng.latitude,startLocationLatLng.longitude),
             destinationName = uiState.value.destination,
@@ -374,48 +382,83 @@ class PlannerViewModel(): ViewModel() {
         saveNotSucess = false
     }
 
+    private fun fetchPlacesNearPolylineBak(key: String,
+                                           selectedLocationType: Int,
+                                           middleLocation: LatLng){
 
-//    fun getStartLocation(current: Context){
-//        val geocoder= Geocoder(current, Locale.getDefault())
-//
-//        try {
-//            val addresses = geocoder.getFromLocationName(enteredStartLocation, 1)
-//
-//            if (addresses != null) {
-//                if (addresses.isNotEmpty()) {
-//
-//                    startLocationLatLng = LatLng(
-//                        addresses[0].latitude,
-//                        addresses[0].longitude)
-//                }
+        val places = mutableListOf<String>()
+
+        val client = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
+
+        val json = "application/json; charset=utf-8".toMediaTypeOrNull()
+
+        val includeLocationType =
+            when(selectedLocationType){
+                1 -> listOf<String>("historical_landmark","national_park","tourist_attraction")
+                2 -> listOf<String>("church","hindu_temple","mosque","synagogue")
+                3 -> listOf<String>("restaurant","cafe")
+                4 -> listOf<String>("hotel","guest_house")
+                else -> listOf<String>("tourist_attraction")
+            }
+
+        val routeDetails = """
+        {
+          "includedTypes": $includeLocationType,
+          "maxResultCount": 10,
+          "locationRestriction": {
+            "circle": {
+              "center": {
+                "latitude": ${middleLocation.latitude},
+                "longitude": ${middleLocation.longitude}},
+              "radius": 1000.0
+            }
+          }
+        }
+    """.trimIndent()
+
+        val body = routeDetails.toRequestBody(json)
+
+        val request = Request.Builder()
+            .url("https://places.googleapis.com/v1/places:searchNearby")
+            .post(body)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("X-Goog-Api-Key", key)
+            .addHeader("X-Goog-FieldMask",
+                "places.displayName,places.types")
+            .build()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+
+                println(responseBody)
+
+                val jsonResponse = JSONObject(responseBody)
+                val locTypes = jsonResponse.getJSONArray("places")
+
+                for ( i in 0 until locTypes.length() ) {
+
+                    val typesList = mutableListOf<String>()
+
+                    val placeObject = locTypes.getJSONObject(i)
+                    val displayNameObject = placeObject.getJSONObject("displayName")
+                    val placeName = displayNameObject.getString("text")
+
+                }
+
+                val displayNameObject: JSONObject = jsonResponse.getJSONObject("displayName")
+                val locationText: String = displayNameObject.getString("text")
+
+//            withContext(Dispatchers.Main) {
+//                onPathReady(decodedPath)
 //            }
-//            else{
-//                startLocationLatLng = LatLng(6.927079, 79.861244)
-//            }
-//        }catch (e: IOException) {
-//            e.printStackTrace()
-//        }
-//    }
-//
-//    fun getEndLocation(current: Context){
-//        val geocoder= Geocoder(current, Locale.getDefault())
-//
-//        try {
-//            val addresses = geocoder.getFromLocationName(enteredEndLocation, 1)
-//
-//            if (addresses != null) {
-//                if (addresses.isNotEmpty()) {
-//
-//                    endLocationLatLng = LatLng(
-//                        addresses[0].latitude,
-//                        addresses[0].longitude)
-//                }
-//            }
-//            else{
-//                endLocationLatLng = LatLng(6.927079, 79.861244)
-//            }
-//        }catch (e: IOException) {
-//            e.printStackTrace()
-//        }
-//    }
+            } catch (e: IOException){
+                e.printStackTrace()
+            }
+        }
+    }
 }

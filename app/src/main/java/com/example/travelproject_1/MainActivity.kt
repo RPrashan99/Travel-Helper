@@ -8,9 +8,11 @@ import androidx.core.view.WindowCompat
 import com.example.travelproject_1.ui.theme.TravelProject_1Theme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
+import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "MainActivity"
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient

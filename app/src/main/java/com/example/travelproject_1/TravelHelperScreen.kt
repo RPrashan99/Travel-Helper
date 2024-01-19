@@ -30,18 +30,24 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.travelproject_1.ui.FinderScreen
 import com.example.travelproject_1.ui.HomePage
+import com.example.travelproject_1.ui.LoginScreen
 import com.example.travelproject_1.ui.MemoryScreen
 import com.example.travelproject_1.ui.NavigatorScreen
 import com.example.travelproject_1.ui.PlannerScreen
+import com.example.travelproject_1.ui.RegistrationScreen
 import com.example.travelproject_1.ui.StartScreen
+import com.example.travelproject_1.ui.UserScreen
 
 enum class TravelHelperScreen(@StringRes val title: Int){
     Start(title = R.string.start),
+    SignUp(title = R.string.signup),
+    SignIn(title = R.string.signin),
     Home(title = R.string.app_name),
     Planner(title = R.string.planner),
     Finder(title = R.string.finder),
     Memory(title = R.string.memory),
     Navigator(title = R.string.navigator),
+    UserDetails(title = R.string.userDetails)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +56,7 @@ fun TravelHelperAppBar(
     currentScreen: TravelHelperScreen,
     canNavigateBack: Boolean,
     navigateUp: () -> Unit,
+    navigateToUserDetails: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -81,10 +88,13 @@ fun TravelHelperAppBar(
             }
         },
         actions = {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = {
+                navigateToUserDetails()
+            }) {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
-                    contentDescription = stringResource(R.string.user_pic))
+                    contentDescription = stringResource(R.string.user_pic),
+                    modifier = Modifier)
             }
         }
     )
@@ -113,7 +123,10 @@ fun TravelHelperApp(
                 TravelHelperAppBar(
                     currentScreen = currentScreen,
                     canNavigateBack = true,
-                    navigateUp = { navController.navigateUp() })
+                    navigateUp = { navController.navigateUp() },
+                    navigateToUserDetails = {
+                        navController.navigate(TravelHelperScreen.UserDetails.name)
+                    })
             }
         }
     ) {
@@ -126,8 +139,26 @@ fun TravelHelperApp(
 
             composable(route = TravelHelperScreen.Start.name){
                 StartScreen(onStartedButtonClicked = {
-                    navController.navigate(TravelHelperScreen.Home.name)
+                    navController.navigate(TravelHelperScreen.SignIn.name)
                 })
+            }
+
+            composable(route = TravelHelperScreen.SignUp.name){
+                RegistrationScreen(onSignInButtonTap = {
+                    navController.navigate(TravelHelperScreen.SignIn.name)
+                },
+                    onRegisterButtonTap = {
+                        navController.navigate(TravelHelperScreen.SignIn.name)
+                    },)
+            }
+
+            composable(route = TravelHelperScreen.SignIn.name){
+                LoginScreen(onSignupButtonTap = {
+                    navController.navigate(TravelHelperScreen.SignUp.name)
+                },
+                    onLoginSuccess = {
+                        navController.navigate(TravelHelperScreen.Home.name)
+                    })
             }
 
             composable(route = TravelHelperScreen.Home.name){
@@ -162,6 +193,10 @@ fun TravelHelperApp(
                         navController.navigate(TravelHelperScreen.Memory.name)
                     }
                 )
+            }
+
+            composable(route = TravelHelperScreen.UserDetails.name){
+                UserScreen()
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.travelproject_1.data.SessionManager
 import com.example.travelproject_1.data.TravelPlan
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -15,11 +16,13 @@ class MemoryViewModel: ViewModel() {
         private set
 
     fun getData(){
+        val currentUserId = SessionManager.currentUser?.id!!
+
         var planList = mutableStateListOf<TravelPlan>()
 
         var db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-        db.collection("TravelPlans").get()
+        db.collection("TravelPlans").whereEqualTo("userId",currentUserId).get()
             .addOnSuccessListener {
                 QueryDocumentSnapshot ->
 

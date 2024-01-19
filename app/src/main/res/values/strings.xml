@@ -1,9 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">TravelProject_1</string>
+    <string name="app_name">TravelProject</string>
+    <string name="signup">SignUp</string>
+    <string name="signin">SignIn</string>
     <string name="finder">Finder</string>
     <string name="navigator">Navigator</string>
     <string name="planner">Planner</string>
     <string name="memory">Memory</string>
+    <string name="userDetails">User Details</string>
     <string name="start">Get Started</string>
     <string name="back_button">Back</string>
     <string name="user_pic">User Picture</string>
